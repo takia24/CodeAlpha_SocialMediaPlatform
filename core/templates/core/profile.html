@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}{{ user_profile.user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<style>
+    .profile-container {
+        max-width: 700px;
+        margin: 40px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .profile-container img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 20px;
+        border: 3px solid #4CAF50;
+    }
+
+    h2 {
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    p {
+        margin: 8px 0;
+        color: #555;
+    }
+
+    .counts {
+        margin-top: 15px;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .counts p {
+        background: #f5f5f5;
+        padding: 8px 15px;
+        border-radius: 20px;
+    }
+
+    .buttons {
+        margin-top: 25px;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .buttons a {
+        text-decoration: none;
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .buttons a:hover {
+        background-color: #388E3C;
+        transform: translateY(-2px);
+    }
+
+    /* Post section */
+    .user-posts {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .user-posts h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .post {
+        border: 1px solid #e0e0e0;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .post:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .post h3 {
+        margin-top: 0;
+        color: #333;
+    }
+
+    .post p {
+        margin: 10px 0;
+        line-height: 1.6;
+    }
+
+    .post img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        margin: 15px 0;
+        object-fit: contain;
+        display: block;
+    }
+
+    .post-time {
+        font-size: 13px;
+        color: #777;
+        margin-bottom: 10px;
+    }
+
+    .post-stats {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .no-posts {
+        text-align: center;
+        padding: 30px;
+        color: #777;
+        font-style: italic;
+    }
+
+    hr {
+        border: none;
+        height: 1px;
+        background: #eee;
+        margin: 30px 0;
+    }
+</style>
+
+<div class="profile-container">
+    <img src="{{ user_profile.profile_pic.url }}" alt="Profile Picture">
+    <h2>{{ user_profile.user.username|title }}'s Profile</h2>
+
+    <p><strong>Bio:</strong> {{ user_profile.bio|default:"No bio yet" }}</p>
+    <p><strong>Location:</strong> {{ user_profile.location|default:"Not specified" }}</p>
+    <p><strong>Birth Date:</strong> {{ user_profile.birth_date|date:"M d, Y"|default:"Not specified" }}</p>
+
+    <div class="counts">
+        <p>Followers: {{ followers }}</p>
+        <p>Following: {{ following }}</p>
+    </div>
+
+    <div class="buttons">
+        <a href="{% url 'home' %}">🏠 Back to Home</a>
+        {% if request.user == user_profile.user %}
+            <a href="{% url 'edit_profile' %}">✏️ Edit Profile</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Post List -->
+<div class="user-posts">
+    <h2>📝 Posts by {{ user_profile.user.username }}</h2>
+
+    {% if posts %}
+        {% for post in posts %}
+            <div class="post">
+                <p class="post-time">Posted on {{ post.created_at|date:"F j, Y · g:i a" }}</p>
+                {% if post.caption %}<h3>{{ post.caption }}</h3>{% endif %}
+                <p>{{ post.content }}</p>
+                {% if post.image %}
+                    <img src="{{ post.image.url }}" alt="Post Image">
+                {% endif %}
+                <div class="post-stats">
+                    <span>❤️ {{ post.like_count }} Likes</span>
+                    <span>💬 {{ post.comment_count }} Comments</span>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="no-posts">No posts yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

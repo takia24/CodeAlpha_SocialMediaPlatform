@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Social Home{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f6f9;
+        margin: 0;
+        padding: 0;
+    }
+
+    .navbar {
+        background-color: #fff;
+        padding: 15px 30px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .navbar-left {
+        display: flex;
+        align-items: center;
+    }
+
+    .navbar img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 15px;
+    }
+
+    .navbar .username {
+        font-weight: bold;
+        color: #333;
+        font-size: 18px;
+    }
+
+    .container {
+        width: 60%;
+        margin: 30px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .welcome-message {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .welcome-message h2 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .post-form {
+        margin-bottom: 30px;
+    }
+
+    .post-form textarea {
+        width: 100%;
+        height: 100px;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        resize: vertical;
+    }
+
+    .post-form .image-upload {
+        margin: 10px 0;
+    }
+
+    button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    .post {
+        margin-top: 30px;
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .post-header img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .post-author {
+        font-weight: bold;
+        font-size: 16px;
+        margin-right: 10px;
+        color: #1e90ff;
+        text-decoration: none;
+    }
+
+    .post-author:hover {
+        text-decoration: underline;
+    }
+
+    .post-time {
+        color: #777;
+        font-size: 12px;
+    }
+
+    .post-content {
+        margin: 15px 0;
+        line-height: 1.5;
+    }
+
+    .post-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    .post-actions {
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .post-actions a {
+        margin-right: 15px;
+        color: #1e90ff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .post-actions a:hover {
+        text-decoration: underline;
+    }
+
+    .post-actions .edit-link {
+        color: #ff9800;
+    }
+
+    .post-actions .delete-link {
+        color: #f44336;
+        background: none;
+        border: none;
+        padding: 0;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .likes {
+        color: #555;
+        margin: 8px 0;
+        font-size: 14px;
+    }
+</style>
+
+<div class="navbar">
+    <div class="navbar-left">
+        <img src="{{ user.profile.profile_pic.url }}" alt="Profile Picture">
+        <div class="username">Welcome, {{ user.username|title }}</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="welcome-message">
+        <h2>Hello {{ user.profile.full_name|default:user.username|title }}!</h2>
+        <p>Share your thoughts and explore posts from others below.</p>
+    </div>
+
+    <div class="post-form">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Post</button>
+        </form>
+    </div>
+
+    {% for post in posts %}
+    <div class="post">
+        <div class="post-header">
+            <img src="{{ post.author.profile.profile_pic.url }}" alt="{{ post.author.username }}">
+            
+            <a href="{% url 'view_profile' post.author.username %}" class="post-author">
+                {{ post.author.username }}
+            </a>
+            <span class="post-time">{{ post.created_at }}</span>
+        </div>
+
+        <div class="post-content">
+            <p>{{ post.content }}</p>
+            {% if post.image %}
+                <img src="{{ post.image.url }}" alt="Post image" class="post-image">
+            {% endif %}
+        </div>
+
+        <div class="likes">
+            Likes: {{ post.like_count }}
+        </div>
+
+        <div class="post-actions">
+            <a href="{% url 'post_detail' post.id %}">View</a>
+            <a href="{% url 'like_post' post.id %}">Like</a>
+            <a href="{% url 'follow_user' post.author.id %}">Follow</a>
+
+            {% if post.author == user %}
+                <a href="{% url 'edit_post' post.id %}" class="edit-link">Edit</a>
+                <form action="{% url 'delete_post' post.id %}" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-link">Delete</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
